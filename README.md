@@ -78,7 +78,7 @@ The plugin now sends `Authorization: Bearer <token>` on every request to `boardg
 **Collection blocks**
 1. Search for "Board Game Collection", "Expansion Collection", or "Accessory Collection" and insert the desired block.
 2. Enter a BGG username. The block renders all owned items of that type as a repeating list using the default pattern (thumbnail, title, version, year, rating, status).
-3. Customise the layout by editing the inner blocks or registering a replacement pattern via the `rdb_tabletop_{subtype}_collection_patterns` filter.
+3. Customise the layout by editing the inner blocks or registering a replacement pattern (see [Filters](#filters)).
 
 ### Step 5: Attribution
 
@@ -127,6 +127,41 @@ Insert → search by title → pick a game. The block exposes fields for title, 
 ### Collection blocks (Board Game Collection / Expansion Collection / Accessory Collection)
 
 Insert the relevant block → enter a BGG username → the block fetches all owned items of that subtype and renders them as a repeating list. Each item exposes: title, year, image, thumbnail, version (name, year, language, publisher), min/max players, playing time, number of plays, user rating, geek rating, comment, status flags, and subtype.
+
+## Filters
+
+### `rdb_tabletop_board_game_patterns`
+
+Swap the default inner block pattern for the Board Game block.
+
+```php
+add_filter( 'rdb_tabletop_board_game_patterns', function ( array $patterns ): array {
+    $patterns[0]['html'] = file_get_contents( __DIR__ . '/patterns/my-board-game.html' );
+    return $patterns;
+} );
+```
+
+### `rdb_tabletop_{subtype}_collection_patterns`
+
+Swap the default inner block pattern for a specific collection subtype (`boardgame`, `boardgameexpansion`, `boardgameaccessory`).
+
+```php
+add_filter( 'rdb_tabletop_boardgame_collection_patterns', function ( array $patterns ): array {
+    $patterns[0]['html'] = file_get_contents( __DIR__ . '/patterns/my-collection.html' );
+    return $patterns;
+} );
+```
+
+### `rdb_tabletop_{subtype}_collection_query_params`
+
+Add or override query parameters sent to the BGG `/collection` endpoint for a specific subtype.
+
+```php
+add_filter( 'rdb_tabletop_boardgame_collection_query_params', function ( array $params ): array {
+    unset( $params['own'] ); // include all items, not just owned
+    return $params;
+} );
+```
 
 ## Requirements
 
