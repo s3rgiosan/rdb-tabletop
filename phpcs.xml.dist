@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<ruleset name="PixelAlbatross">
+	<rule ref="PixelAlbatross" />
+
+	<exclude-pattern>*/vendor/*</exclude-pattern>
+	<exclude-pattern>*/build/*</exclude-pattern>
+	<exclude-pattern>*/tests/fixtures/*</exclude-pattern>
+
+	<rule ref="Generic.CodeAnalysis.UnusedFunctionParameter"/>
+	<rule ref="Generic.Commenting.Todo"/>
+
+	<config name="minimum_supported_wp_version" value="6.7"/>
+
+	<rule ref="WordPress.WP.I18n">
+		<properties>
+			<property name="text_domain" type="array">
+				<element value="rdb-tabletop"/>
+			</property>
+		</properties>
+	</rule>
+</ruleset>

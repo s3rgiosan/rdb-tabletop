@@ -1,17 +1,19 @@
 # RDB Tabletop
 
-> BoardGameGeek data sources for Remote Data Blocks.
+> BoardGameGeek data source for Remote Data Blocks.
 
 ## Description
 
-A WordPress plugin that adds BoardGameGeek (BGG) data sources to [Remote Data Blocks](https://wordpress.org/plugins/remote-data-blocks/). Editors can insert a "Board Game" block to search BGG by title and render full game detail, or a "Board Game Collection" block to browse a user's owned games and render detail for picks.
+A WordPress plugin that adds a BoardGameGeek (BGG) data source to [Remote Data Blocks](https://wordpress.org/plugins/remote-data-blocks/). Editors can insert a "Board Game" block to search BGG by title and render full game detail, or one of three collection blocks to render all owned items of a given type from a BGG user's collection.
 
 Built on the [BGG XML API2](https://boardgamegeek.com/wiki/page/BGG_XML_API2). Calls are made server-side and authenticated with a BGG application bearer token.
 
 ## Features
 
 - **Board Game block**: search BGG → pick → render title, year, description, image, thumbnail, players, playing time, age, weight, rating, rank, designers, artists, publishers, categories, mechanics, families, and a BGG link
-- **Board Game Collection block**: enter a BGG username → browse that user's owned games → pick → render detail
+- **Board Game Collection block**: enter a BGG username → render all owned board games as a list (thumbnail, title, version, year, rating, status)
+- **Expansion Collection block**: same as above, scoped to expansions
+- **Accessory Collection block**: same as above, scoped to accessories
 - **Bearer token auth**: secure server-side calls via `Authorization: Bearer <token>` (per BGG policy)
 - **XML → array deserialization**: custom `QueryRunner` converts the BGG XML responses into shapes that Remote Data Blocks' output schema can bind directly
 - **HTTP 202 retry**: handles BGG's queued-response pattern transparently
@@ -68,9 +70,15 @@ The plugin now sends `Authorization: Bearer <token>` on every request to `boardg
 
 ### Step 4: Add the Block
 
-1. In the block editor, search for "Board Game" or "Board Game Collection".
-2. Insert the block, enter a search term (game title) or a BGG username, and pick a result.
-3. Use Remote Data Blocks' binding UI to wire the selected item's fields (title, image, rating, etc.) into your layout.
+**Board Game block**
+1. In the block editor search for "Board Game" and insert the block.
+2. Enter a game title to search BGG, then pick a result from the list.
+3. Use Remote Data Blocks' binding UI to wire fields (title, image, rating, etc.) into your layout.
+
+**Collection blocks**
+1. Search for "Board Game Collection", "Expansion Collection", or "Accessory Collection" and insert the desired block.
+2. Enter a BGG username. The block renders all owned items of that type as a repeating list using the default pattern (thumbnail, title, version, year, rating, status).
+3. Customise the layout by editing the inner blocks or registering a replacement pattern via the `rdb_tabletop_{subtype}_collection_patterns` filter.
 
 ### Step 5: Attribution
 
@@ -106,7 +114,7 @@ Other policy points you should know:
 - **Caching is your friend.** The plugin relies on Remote Data Blocks' built-in object cache. Keep it enabled. BGG can suspend access for applications that generate excessive traffic.
 - **Domain matters.** Requests must go to `boardgamegeek.com`, not `www.boardgamegeek.com`. The plugin already uses the correct host.
 - **Attribution required.** See Step 5 above.
-- **Policies can change.** BGG announces changes in the [Geek Tools News forum](https://boardgamegeek.com/forum/1000/bgg/geek-tools-news).
+- **Policies can change.** Check the [BGG applications page](https://boardgamegeek.com/applications) and the [BGG forums](https://boardgamegeek.com/forums) periodically.
 
 If your site is personal/non-commercial at launch but later starts showing ads or taking payment, go back to [https://boardgamegeek.com/applications](https://boardgamegeek.com/applications) and update your application.
 
@@ -116,9 +124,9 @@ If your site is personal/non-commercial at launch but later starts showing ads o
 
 Insert → search by title → pick a game. The block exposes fields for title, year, description, image, thumbnail, min/max players, playing time, min age, weight, average rating, rating count, overall rank, designers, artists, publishers, categories, mechanics, families, and the BGG URL.
 
-### Board Game Collection block
+### Collection blocks (Board Game Collection / Expansion Collection / Accessory Collection)
 
-Insert → enter a BGG username → browse the user's owned board games (expansions excluded by default) → pick one to render its full detail.
+Insert the relevant block → enter a BGG username → the block fetches all owned items of that subtype and renders them as a repeating list. Each item exposes: title, year, image, thumbnail, version (name, year, language, publisher), min/max players, playing time, number of plays, user rating, geek rating, comment, status flags, and subtype.
 
 ## Requirements
 

@@ -1,0 +1,32 @@
+{
+  "name": "rdb-tabletop",
+  "version": "1.0.0",
+  "description": "Board game data from BoardGameGeek via Remote Data Blocks.",
+  "contributors": [
+    {
+      "name": "Sérgio Santos",
+      "homepage": "https://s3rgiosan.dev"
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/s3rgiosan/rdb-tabletop"
+  },
+  "license": "GPL-3.0-or-later",
+  "scripts": {
+    "build": "wp-scripts build",
+    "start": "wp-scripts start",
+    "packages-update": "wp-scripts packages-update",
+    "lint:js": "wp-scripts lint-js",
+    "lint:js:fix": "wp-scripts lint-js --fix",
+    "lint:css": "wp-scripts lint-style",
+    "format": "wp-scripts format"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=9.0.0"
+  },
+  "devDependencies": {
+    "@wordpress/scripts": "^30.0.0"
+  }
+}

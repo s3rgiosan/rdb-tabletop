@@ -1,0 +1,13 @@
+/*
+ * Fix: Gutenberg 22.x sets display:flex (row) on is-full-screen modal content.
+ * RDB's DataViews modal requires a column layout so the sticky header sits above
+ * the scrollable item list. Without this override the children-container collapses
+ * to zero width and nothing is visible.
+ */
+.rdb-editor_dataviews-modal-item-select .components-modal__content {
+	flex-direction: column;
+}
+
+.rdb-editor_dataviews-modal-item-select .components-modal__content .components-modal__header {
+	flex-shrink: 0;
+}
