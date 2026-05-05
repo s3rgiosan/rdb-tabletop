@@ -4,16 +4,16 @@
 
 ## Description
 
-A WordPress plugin that adds a BoardGameGeek (BGG) data source to [Remote Data Blocks](https://wordpress.org/plugins/remote-data-blocks/). Editors can insert a "Board Game" block to search BGG by title and render full game detail, or one of three collection blocks to render all owned items of a given type from a BGG user's collection.
+A WordPress plugin that adds a BoardGameGeek (BGG) data source to [Remote Data Blocks](https://wordpress.org/plugins/remote-data-blocks/). Editors can insert a "Board Game" block to search BGG by title and render full game detail, or one of six collection / wishlist blocks to render items from a BGG user's collection.
 
 Built on the [BGG XML API2](https://boardgamegeek.com/wiki/page/BGG_XML_API2). Calls are made server-side and authenticated with a BGG application bearer token.
 
 ## Features
 
 - **Board Game block**: search BGG → pick → render title, year, description, image, thumbnail, players, playing time, age, weight, rating, rank, designers, artists, publishers, categories, mechanics, families, and a BGG link
-- **Board Game Collection block**: enter a BGG username → render all owned board games as a list (thumbnail, title, version, year, rating, status)
-- **Expansion Collection block**: same as above, scoped to expansions
-- **Accessory Collection block**: same as above, scoped to accessories
+- **Board Game / Expansion / Accessory Collection blocks**: enter a BGG username → render all owned items of that subtype (thumbnail, title, version, year, rating, status)
+- **Board Game / Expansion / Accessory Wishlist blocks**: same shape, scoped to wishlisted items
+- **Auto-injected attribution**: a `rdb-tabletop/powered-by` block is appended after every RDB Tabletop block at render time
 - **Bearer token auth**: secure server-side calls via `Authorization: Bearer <token>` (per BGG policy)
 - **XML → array deserialization**: custom `QueryRunner` converts the BGG XML responses into shapes that Remote Data Blocks' output schema can bind directly
 - **HTTP 202 retry**: handles BGG's queued-response pattern transparently
@@ -38,8 +38,8 @@ To include this plugin as a dependency in your Composer-managed WordPress projec
 composer require s3rgiosan/rdb-tabletop
 ```
 
-2. Run `composer install`.
-3. Activate the plugin from your WordPress admin area or using WP-CLI.
+1. Run `composer install`.
+2. Activate the plugin from your WordPress admin area or using WP-CLI.
 
 ## Setup
 
@@ -52,7 +52,7 @@ composer require s3rgiosan/rdb-tabletop
 
 ### Step 1: Apply for XML API Access
 
-BGG reviews every application manually and approval can take a week or more.
+BGG reviews every application manually and approval can take a week or more. See [docs/application-setup.md](docs/application-setup.md) for a field-by-field walk-through with copy-paste-ready answers.
 
 ### Step 2: Create a Token
 
@@ -71,20 +71,20 @@ The plugin now sends `Authorization: Bearer <token>` on every request to `boardg
 ### Step 4: Add the Block
 
 **Board Game block**
+
 1. In the block editor search for "Board Game" and insert the block.
 2. Enter a game title to search BGG, then pick a result from the list.
 3. Use Remote Data Blocks' binding UI to wire fields (title, image, rating, etc.) into your layout.
 
-**Collection blocks**
-1. Search for "Board Game Collection", "Expansion Collection", or "Accessory Collection" and insert the desired block.
-2. Enter a BGG username. The block renders all owned items of that type as a repeating list using the default pattern (thumbnail, title, version, year, rating, status).
+**Collection / Wishlist blocks**
+
+1. Search for "Board Game Collection", "Expansion Collection", "Accessory Collection", "Board Game Wishlist", "Expansion Wishlist", or "Accessory Wishlist" and insert the desired block.
+2. Enter a BGG username. Collection blocks render all items the user owns (BGG `own=1`); wishlist blocks render all items the user has wishlisted (BGG `wishlist=1`). Both use the same default pattern (thumbnail, title, version, year, rating, status).
 3. Customise the layout by editing the inner blocks or registering a replacement pattern (see [Filters](#filters)).
 
 ### Step 5: Attribution
 
-BGG policy requires public-facing apps that display BGG data to include the **"Powered by BGG"** logo linking back to `https://boardgamegeek.com`. The plugin ships the badge at `assets/powered-by.webp` and embeds it in the default block patterns ("Board Game teaser" and "Board Game Collection item") — when you insert a block and accept the suggested pattern, the attribution is already present. Do not remove it.
-
-If you design a custom template from scratch, add the badge yourself. Use the image at `wp-content/plugins/rdb-tabletop/assets/powered-by.webp` and link it to `https://boardgamegeek.com`.
+BGG policy requires public-facing apps that display BGG data to include the **"Powered by BGG"** logo linking back to `https://boardgamegeek.com`. The plugin handles this automatically: a dedicated `rdb-tabletop/powered-by` block is appended after every RDB Tabletop block at render time via a `render_block` filter. No editor action required, and the markup is not stored in `post_content`.
 
 ## License Considerations
 
@@ -124,9 +124,13 @@ If your site is personal/non-commercial at launch but later starts showing ads o
 
 Insert → search by title → pick a game. The block exposes fields for title, year, description, image, thumbnail, min/max players, playing time, min age, weight, average rating, rating count, overall rank, designers, artists, publishers, categories, mechanics, families, and the BGG URL.
 
-### Collection blocks (Board Game Collection / Expansion Collection / Accessory Collection)
+### Collection blocks (Board Game / Expansion / Accessory Collection)
 
-Insert the relevant block → enter a BGG username → the block fetches all owned items of that subtype and renders them as a repeating list. Each item exposes: title, year, image, thumbnail, version (name, year, language, publisher), min/max players, playing time, number of plays, user rating, geek rating, comment, status flags, and subtype.
+Insert the relevant block → enter a BGG username → the block fetches all owned items of that subtype (BGG `own=1`) and renders them as a repeating list. Each item exposes: title, year, image, thumbnail, version (name, year, language, publisher), min/max players, playing time, number of plays, user rating, geek rating, comment, status flags, and subtype.
+
+### Wishlist blocks (Board Game / Expansion / Accessory Wishlist)
+
+Same shape and fields as the Collection blocks, but scoped to items the user has wishlisted (BGG `wishlist=1`).
 
 ## Filters
 
@@ -141,24 +145,36 @@ add_filter( 'rdb_tabletop_board_game_patterns', function ( array $patterns ): ar
 } );
 ```
 
-### `rdb_tabletop_{subtype}_collection_patterns`
+### `rdb_tabletop_{subtype}_{kind}_patterns`
 
-Swap the default inner block pattern for a specific collection subtype (`boardgame`, `boardgameexpansion`, `boardgameaccessory`).
+Swap the default inner block pattern for a specific subtype × kind. `{subtype}` is `boardgame`, `boardgameexpansion`, or `boardgameaccessory`. `{kind}` is `collection` or `wishlist`.
 
 ```php
 add_filter( 'rdb_tabletop_boardgame_collection_patterns', function ( array $patterns ): array {
     $patterns[0]['html'] = file_get_contents( __DIR__ . '/patterns/my-collection.html' );
     return $patterns;
 } );
+
+add_filter( 'rdb_tabletop_boardgame_wishlist_patterns', function ( array $patterns ): array {
+    $patterns[0]['html'] = file_get_contents( __DIR__ . '/patterns/my-wishlist.html' );
+    return $patterns;
+} );
 ```
 
-### `rdb_tabletop_{subtype}_collection_query_params`
+### `rdb_tabletop_{subtype}_{kind}_query_params`
 
-Add or override query parameters sent to the BGG `/collection` endpoint for a specific subtype.
+Add or override query parameters sent to the BGG `/collection` endpoint for a specific subtype × kind. Use this to combine status flags (e.g. owned + wishlisted), apply rating thresholds (`minrating`, `minbggrating`), or scope to recent changes (`modifiedsince`).
 
 ```php
+// Include both owned and wishlisted items in the board game collection block.
 add_filter( 'rdb_tabletop_boardgame_collection_query_params', function ( array $params ): array {
-    unset( $params['own'] ); // include all items, not just owned
+    $params['wishlist'] = '1';
+    return $params;
+} );
+
+// Restrict the wishlist block to high-priority entries.
+add_filter( 'rdb_tabletop_boardgame_wishlist_query_params', function ( array $params ): array {
+    $params['wishlistpriority'] = '1';
     return $params;
 } );
 ```
