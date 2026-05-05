@@ -32,6 +32,7 @@ class Collection {
 
 	/**
 	 * Register one block for each configured subtype.
+	private const PLACEHOLDER = '—';
 	 */
 	public static function register(): void {
 		$data_source   = BggDataSource::create();
@@ -194,7 +195,7 @@ class Collection {
 					'name'     => __( 'Year', 'rdb-tabletop' ),
 					'type'     => 'string',
 					'generate' => static function ( array $item ): string {
-						return (string) ( $item['yearpublished'][0]['_text'] ?? '' );
+						return self::or_dash( (string) ( $item['yearpublished'][0]['_text'] ?? '' ) );
 					},
 				],
 				'image'       => [
@@ -222,7 +223,11 @@ class Collection {
 					'name'     => __( 'Version year', 'rdb-tabletop' ),
 					'type'     => 'string',
 					'generate' => static function ( array $item ): string {
-						return (string) ( $item['version'][0]['item'][0]['yearpublished'][0]['value'] ?? '' );
+						$version_year = (string) ( $item['version'][0]['item'][0]['yearpublished'][0]['value'] ?? '' );
+						if ( '' !== $version_year ) {
+							return $version_year;
+						}
+						return self::or_dash( (string) ( $item['yearpublished'][0]['_text'] ?? '' ) );
 					},
 				],
 				'version_language' => [
@@ -231,10 +236,13 @@ class Collection {
 					'generate' => static function ( array $item ): string {
 						foreach ( $item['version'][0]['item'][0]['link'] ?? [] as $link ) {
 							if ( 'language' === ( $link['type'] ?? '' ) ) {
-								return (string) ( $link['value'] ?? '' );
+								$value = (string) ( $link['value'] ?? '' );
+								if ( '' !== $value ) {
+									return $value;
+								}
 							}
 						}
-						return '';
+						return self::PLACEHOLDER;
 					},
 				],
 				'version_publisher' => [
@@ -243,10 +251,13 @@ class Collection {
 					'generate' => static function ( array $item ): string {
 						foreach ( $item['version'][0]['item'][0]['link'] ?? [] as $link ) {
 							if ( 'boardgamepublisher' === ( $link['type'] ?? '' ) ) {
-								return (string) ( $link['value'] ?? '' );
+								$value = (string) ( $link['value'] ?? '' );
+								if ( '' !== $value ) {
+									return $value;
+								}
 							}
 						}
-						return '';
+						return self::PLACEHOLDER;
 					},
 				],
 				'subtype'       => [
@@ -260,65 +271,65 @@ class Collection {
 					'name'     => __( 'Min players', 'rdb-tabletop' ),
 					'type'     => 'string',
 					'generate' => static function ( array $item ): string {
-						return (string) ( $item['stats'][0]['minplayers'] ?? '' );
+						return self::or_dash( (string) ( $item['stats'][0]['minplayers'] ?? '' ) );
 					},
 				],
 				'max_players'   => [
 					'name'     => __( 'Max players', 'rdb-tabletop' ),
 					'type'     => 'string',
 					'generate' => static function ( array $item ): string {
-						return (string) ( $item['stats'][0]['maxplayers'] ?? '' );
+						return self::or_dash( (string) ( $item['stats'][0]['maxplayers'] ?? '' ) );
 					},
 				],
 				'playing_time'  => [
 					'name'     => __( 'Playing time (minutes)', 'rdb-tabletop' ),
 					'type'     => 'string',
 					'generate' => static function ( array $item ): string {
-						return (string) ( $item['stats'][0]['playingtime'] ?? '' );
+						return self::or_dash( (string) ( $item['stats'][0]['playingtime'] ?? '' ) );
 					},
 				],
 				'min_play_time' => [
 					'name'     => __( 'Min play time (minutes)', 'rdb-tabletop' ),
 					'type'     => 'string',
 					'generate' => static function ( array $item ): string {
-						return (string) ( $item['stats'][0]['minplaytime'] ?? '' );
+						return self::or_dash( (string) ( $item['stats'][0]['minplaytime'] ?? '' ) );
 					},
 				],
 				'max_play_time' => [
 					'name'     => __( 'Max play time (minutes)', 'rdb-tabletop' ),
 					'type'     => 'string',
 					'generate' => static function ( array $item ): string {
-						return (string) ( $item['stats'][0]['maxplaytime'] ?? '' );
+						return self::or_dash( (string) ( $item['stats'][0]['maxplaytime'] ?? '' ) );
 					},
 				],
 				'num_plays'     => [
 					'name'     => __( 'Number of plays', 'rdb-tabletop' ),
 					'type'     => 'string',
 					'generate' => static function ( array $item ): string {
-						return (string) ( $item['numplays'][0]['_text'] ?? '' );
+						return self::or_dash( (string) ( $item['numplays'][0]['_text'] ?? '' ) );
 					},
 				],
 				'comment'       => [
 					'name'     => __( 'Comment', 'rdb-tabletop' ),
 					'type'     => 'string',
 					'generate' => static function ( array $item ): string {
-						return (string) ( $item['comment'][0]['_text'] ?? '' );
+						return self::or_dash( (string) ( $item['comment'][0]['_text'] ?? '' ) );
 					},
 				],
 				'user_rating'  => [
 					'name'     => __( 'User rating', 'rdb-tabletop' ),
 					'type'     => 'string',
 					'generate' => static function ( array $item ): string {
-						$value = $item['stats'][0]['rating'][0]['value'] ?? '';
-						return 'N/A' === $value ? '' : (string) $value;
+						$value = (string) ( $item['stats'][0]['rating'][0]['value'] ?? '' );
+						return 'N/A' === $value ? self::PLACEHOLDER : self::or_dash( $value );
 					},
 				],
 				'geek_rating'  => [
 					'name'     => __( 'Geek rating', 'rdb-tabletop' ),
 					'type'     => 'string',
 					'generate' => static function ( array $item ): string {
-						$value = $item['stats'][0]['rating'][0]['bayesaverage'][0]['value'] ?? '';
-						return '0' === $value ? '' : (string) $value;
+						$value = (string) ( $item['stats'][0]['rating'][0]['bayesaverage'][0]['value'] ?? '' );
+						return '0' === $value ? self::PLACEHOLDER : self::or_dash( $value );
 					},
 				],
 				'status'       => [
@@ -347,5 +358,12 @@ class Collection {
 				],
 			],
 		];
+	}
+
+	/**
+	 * Return the value if non-empty, otherwise the placeholder.
+	 */
+	private static function or_dash( string $value ): string {
+		return '' === $value ? self::PLACEHOLDER : $value;
 	}
 }
