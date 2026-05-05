@@ -18,12 +18,17 @@ class BggQueryRunner extends QueryRunner {
 	/**
 	 * Max retries for HTTP 202 queued responses.
 	 */
-	protected const MAX_QUEUE_RETRIES = 5;
+	protected const MAX_QUEUE_RETRIES = 8;
 
 	/**
-	 * Delay (seconds) between retries.
+	 * Initial delay (seconds) between retries. Doubles each attempt up to QUEUE_RETRY_MAX_DELAY.
 	 */
 	protected const QUEUE_RETRY_DELAY = 2;
+
+	/**
+	 * Cap (seconds) for exponential backoff between retries.
+	 */
+	protected const QUEUE_RETRY_MAX_DELAY = 30;
 
 	/**
 	 * Fetch the raw response, retrying up to MAX_QUEUE_RETRIES times on HTTP 202.
@@ -57,7 +62,8 @@ class BggQueryRunner extends QueryRunner {
 				);
 			}
 
-			sleep( self::QUEUE_RETRY_DELAY );
+			$delay = min( self::QUEUE_RETRY_DELAY * ( 2 ** ( $attempt - 1 ) ), self::QUEUE_RETRY_MAX_DELAY );
+			sleep( $delay );
 		} while ( true );
 	}
 
